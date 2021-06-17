@@ -65,7 +65,7 @@ local_provisioning_profile = rule(
     attrs = dict(
         _fallback_srcs = attr.label(
             allow_files = [".mobileprovision"],
-            default = "@local_provisioning_profiles//:profiles",
+            default = "@local_provisioning_profiles//:fallback_profiles",
         ),
         _local_srcs = attr.label(
             default = "@local_provisioning_profiles//:profiles",
