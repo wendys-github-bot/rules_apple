@@ -18,7 +18,11 @@ load(
     "@build_bazel_rules_apple//apple/internal:apple_framework_import.bzl",
     _apple_dynamic_framework_import = "apple_dynamic_framework_import",
     _apple_static_framework_import = "apple_static_framework_import",
+    _local_provisioning_profile = "local_provisioning_profile",
+    _local_provisioning_profiles = "local_provisioning_profiles",
 )
 
 apple_dynamic_framework_import = _apple_dynamic_framework_import
 apple_static_framework_import = _apple_static_framework_import
+local_provisioning_profile = _local_provisioning_profile
+local_provisioning_profiles = _local_provisioning_profiles
