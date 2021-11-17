@@ -395,6 +395,14 @@ def _resources_partial_impl(
     # for the purposes of deduplicating top level resources and multiple library scoped resources.
     processed_deduplication_map = {}
 
+    product_module_names = []
+    product_module_name_index = 0
+
+    if hasattr(final_provider,'xibs'):
+        for bundle, _, _ in final_provider.xibs:
+            product_module_name = bundle or bundle_name
+            product_module_names.append(product_module_name.replace("Resources.bundle",""))
+
     for field in fields:
         deduplicated = _deduplicate(
             avoid_owners = avoid_owners,
@@ -431,6 +439,11 @@ def _resources_partial_impl(
             # requires it.
             if requires_swift_module:
                 processing_args["swift_module"] = swift_module
+            # if custom product_module_name from apple_bundle resource is empty
+            elif field == "xibs" and swift_module == None:
+                module_name = product_module_names[product_module_name_index]
+                processing_args["swift_module"] = module_name
+                product_module_name_index = product_module_name_index + 1
 
             result = processing_func(**processing_args)
             bundle_files.extend(result.files)

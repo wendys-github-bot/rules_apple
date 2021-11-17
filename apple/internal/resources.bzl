@@ -266,7 +266,7 @@ def _bucketize(
         **buckets
     )
 
-def _bucketize_typed_data(*, bucket_type, owner = None, parent_dir_param = None, resources):
+def _bucketize_typed_data(*, bucket_type, owner = None, parent_dir_param = None, resources, swift_module = None):
     """Collects and bucketizes a specific type of resource.
 
     Adds the given resources directly into a tuple under the field named in bucket_type. This avoids
