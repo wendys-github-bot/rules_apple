@@ -287,6 +287,21 @@ objc_library(
     tags = FIXTURE_TAGS,
 )
 
+apple_resource_group(
+    name = "processed_resources_in_structured_resources",
+    structured_resources = [
+        ":localization",
+    ],
+)
+
+objc_library(
+    name = "processed_resources_in_structured_resources_lib",
+    srcs = ["main.m"],
+    data = [
+        ":processed_resources_in_structured_resources",
+    ],
+)
+
 filegroup(
     name = "localized_plists",
     srcs = glob(["*.lproj/*.plist"]),
@@ -600,4 +615,10 @@ filegroup(
 filegroup(
     name = "WatchAppIcon.xcassets",
     srcs = glob(["WatchAppIcon.xcassets/**"]),
+)
+
+cc_binary(
+    name = "cc_test_binary",
+    srcs = ["main.cc"],
+    tags = FIXTURE_TAGS,
 )

@@ -1,4 +1,13 @@
 load(
+    "//apple/internal:xcframework_rules.bzl",
+    "apple_static_xcframework",
+)  # buildifier: disable=bzl-visibility
+load(
+    "//apple:apple.bzl",
+    "apple_universal_binary",
+    "apple_xcframework",
+)
+load(
     "//apple:versioning.bzl",
     "apple_bundle_version",
 )
@@ -9,6 +18,10 @@ load(
 load(
     "//apple:resources.bzl",
     "apple_core_data_model",
+)
+load(
+    "@build_bazel_rules_swift//swift:swift.bzl",
+    "swift_library",
 )
 
 licenses(["notice"])
@@ -219,4 +232,406 @@ apple_core_data_model(
         "//test/starlark_tests/resources:no_code_generation_datamodel",
     ],
     tags = ["manual"],
+)
+
+objc_library(
+    name = "fmwk_lib",
+    srcs = [
+        "//test/starlark_tests/resources:shared.h",
+        "//test/starlark_tests/resources:shared.m",
+    ],
+    tags = TARGETS_UNDER_TEST_TAGS,
+)
+
+swift_library(
+    name = "swift_fmwk_lib",
+    srcs = [
+        "DummyFmwk.swift",
+    ],
+    module_name = "ios_dynamic_lipoed_swift_xcframework",
+    tags = TARGETS_UNDER_TEST_TAGS,
+)
+
+apple_xcframework(
+    name = "ios_dynamic_xcframework",
+    bundle_id = "com.google.example",
+    framework_type = ["dynamic"],
+    infoplists = [
+        "//test/starlark_tests/resources:Info.plist",
+    ],
+    ios = {
+        "simulator": ["x86_64"],
+        "device": ["arm64"],
+    },
+    minimum_os_versions = {
+        "ios": "8.0",
+    },
+    public_hdrs = [
+        "//test/starlark_tests/resources:shared.h",
+    ],
+    tags = TARGETS_UNDER_TEST_TAGS,
+    deps = [":fmwk_lib"],
+)
+
+apple_xcframework(
+    name = "ios_dynamic_lipoed_xcframework",
+    bundle_id = "com.google.example",
+    framework_type = ["dynamic"],
+    infoplists = [
+        "//test/starlark_tests/resources:Info.plist",
+    ],
+    ios = {
+        "simulator": [
+            "i386",
+            "arm64",
+            "x86_64",
+        ],
+        "device": [
+            "armv7",
+            "arm64",
+        ],
+    },
+    minimum_os_versions = {
+        "ios": "8.0",
+    },
+    public_hdrs = [
+        "//test/starlark_tests/resources:shared.h",
+    ],
+    tags = TARGETS_UNDER_TEST_TAGS,
+    deps = [":fmwk_lib"],
+)
+
+apple_xcframework(
+    name = "ios_dynamic_lipoed_swift_xcframework",
+    bundle_id = "com.google.example",
+    framework_type = ["dynamic"],
+    infoplists = [
+        "//test/starlark_tests/resources:Info.plist",
+    ],
+    ios = {
+        "simulator": [
+            "arm64",
+            "x86_64",
+        ],
+        "device": [
+            "arm64",
+        ],
+    },
+    minimum_os_versions = {
+        "ios": "10.0",
+    },
+    tags = TARGETS_UNDER_TEST_TAGS,
+    deps = [":swift_fmwk_lib"],
+)
+
+apple_xcframework(
+    name = "ios_dynamic_xcframework_min_ver_10",
+    bundle_id = "com.google.example",
+    framework_type = ["dynamic"],
+    infoplists = [
+        "//test/starlark_tests/resources:Info.plist",
+    ],
+    ios = {
+        "simulator": ["x86_64"],
+        "device": ["arm64"],
+    },
+    minimum_os_versions = {
+        "ios": "10.0",
+    },
+    public_hdrs = [
+        "//test/starlark_tests/resources:shared.h",
+    ],
+    tags = TARGETS_UNDER_TEST_TAGS,
+    deps = [":fmwk_lib"],
+)
+
+apple_xcframework(
+    name = "ios_dynamic_xcframework_exclusively_ipad_device_family",
+    bundle_id = "com.google.example",
+    families_required = {
+        "ios": ["ipad"],
+    },
+    framework_type = ["dynamic"],
+    infoplists = [
+        "//test/starlark_tests/resources:Info.plist",
+        "//test/starlark_tests/resources:Another.plist",
+    ],
+    ios = {
+        "simulator": ["x86_64"],
+        "device": ["arm64"],
+    },
+    minimum_os_versions = {
+        "ios": "8.0",
+    },
+    public_hdrs = [
+        "//test/starlark_tests/resources:shared.h",
+    ],
+    tags = TARGETS_UNDER_TEST_TAGS,
+    deps = [":fmwk_lib"],
+)
+
+apple_xcframework(
+    name = "ios_dynamic_xcframework_multiple_infoplists",
+    bundle_id = "com.google.example",
+    framework_type = ["dynamic"],
+    infoplists = [
+        "//test/starlark_tests/resources:Info.plist",
+        "//test/starlark_tests/resources:Another.plist",
+    ],
+    ios = {
+        "simulator": ["x86_64"],
+        "device": ["arm64"],
+    },
+    minimum_os_versions = {
+        "ios": "8.0",
+    },
+    public_hdrs = [
+        "//test/starlark_tests/resources:shared.h",
+    ],
+    tags = TARGETS_UNDER_TEST_TAGS,
+    deps = [":fmwk_lib"],
+)
+
+apple_xcframework(
+    name = "ios_dynamic_xcframework_with_data_resource_bundle",
+    bundle_id = "com.google.example",
+    data = [
+        "//test/starlark_tests/resources:Another.plist",
+        "//test/starlark_tests/resources:resource_bundle",
+    ],
+    framework_type = ["dynamic"],
+    infoplists = [
+        "//test/starlark_tests/resources:Info.plist",
+    ],
+    ios = {
+        "simulator": ["x86_64"],
+        "device": ["arm64"],
+    },
+    minimum_os_versions = {
+        "ios": "8.0",
+    },
+    public_hdrs = [
+        "//test/starlark_tests/resources:shared.h",
+    ],
+    tags = TARGETS_UNDER_TEST_TAGS,
+    deps = [":fmwk_lib"],
+)
+
+apple_xcframework(
+    name = "ios_dynamic_xcframework_with_deps_resource_bundle",
+    bundle_id = "com.google.example",
+    framework_type = ["dynamic"],
+    infoplists = [
+        "//test/starlark_tests/resources:Info.plist",
+    ],
+    ios = {
+        "simulator": ["x86_64"],
+        "device": ["arm64"],
+    },
+    minimum_os_versions = {
+        "ios": "8.0",
+    },
+    public_hdrs = [
+        "//test/starlark_tests/resources:shared.h",
+    ],
+    tags = TARGETS_UNDER_TEST_TAGS,
+    deps = [
+        ":fmwk_lib",
+        "//test/starlark_tests/resources:resource_bundle",
+    ],
+)
+
+apple_xcframework(
+    name = "ios_dynamic_xcframework_stripped",
+    bundle_id = "com.google.example",
+    exported_symbols_lists = [
+        "//test/starlark_tests/resources:ExportAnotherFunctionShared.exp",
+    ],
+    framework_type = ["dynamic"],
+    infoplists = [
+        "//test/starlark_tests/resources:Info.plist",
+    ],
+    ios = {
+        "simulator": ["x86_64"],
+        "device": ["arm64"],
+    },
+    linkopts = ["-x"],
+    minimum_os_versions = {
+        "ios": "8.0",
+    },
+    public_hdrs = [
+        "//test/starlark_tests/resources:shared.h",
+    ],
+    tags = TARGETS_UNDER_TEST_TAGS,
+    deps = [":fmwk_lib"],
+)
+
+apple_xcframework(
+    name = "ios_dynamic_xcframework_stripped_two_exported_symbols_lists",
+    bundle_id = "com.google.example",
+    exported_symbols_lists = [
+        "//test/starlark_tests/resources:ExportAnotherFunctionShared.exp",
+        "//test/starlark_tests/resources:ExportDontCallMeShared.exp",
+    ],
+    framework_type = ["dynamic"],
+    infoplists = [
+        "//test/starlark_tests/resources:Info.plist",
+    ],
+    ios = {
+        "simulator": ["x86_64"],
+        "device": ["arm64"],
+    },
+    linkopts = ["-x"],
+    minimum_os_versions = {
+        "ios": "8.0",
+    },
+    public_hdrs = [
+        "//test/starlark_tests/resources:shared.h",
+    ],
+    tags = TARGETS_UNDER_TEST_TAGS,
+    deps = [":fmwk_lib"],
+)
+
+apple_xcframework(
+    name = "ios_dynamic_xcframework_dead_stripped",
+    bundle_id = "com.google.example",
+    exported_symbols_lists = [
+        "//test/starlark_tests/resources:ExportAnotherFunctionShared.exp",
+    ],
+    framework_type = ["dynamic"],
+    infoplists = [
+        "//test/starlark_tests/resources:Info.plist",
+    ],
+    ios = {
+        "simulator": ["x86_64"],
+        "device": ["arm64"],
+    },
+    linkopts = ["-dead_strip"],
+    minimum_os_versions = {
+        "ios": "8.0",
+    },
+    public_hdrs = [
+        "//test/starlark_tests/resources:shared.h",
+    ],
+    tags = TARGETS_UNDER_TEST_TAGS,
+    deps = [":fmwk_lib"],
+)
+
+apple_xcframework(
+    name = "ios_swift_xcframework_with_generated_header",
+    bundle_id = "com.google.example",
+    bundle_name = "SwiftFmwkWithGenHeader",
+    framework_type = ["dynamic"],
+    infoplists = [
+        "//test/starlark_tests/resources:Info.plist",
+    ],
+    ios = {
+        "simulator": [
+            "arm64",
+            "x86_64",
+        ],
+        "device": [
+            "arm64",
+        ],
+    },
+    minimum_os_versions = {
+        "ios": "8.0",
+    },
+    public_hdrs = [
+        "//test/starlark_tests/resources:shared.h",
+    ],
+    tags = TARGETS_UNDER_TEST_TAGS,
+    deps = [":SwiftFmwkWithGenHeader"],
+)
+
+apple_static_xcframework(
+    name = "ios_static_xcframework",
+    ios = {
+        "simulator": [
+            "x86_64",
+            "arm64",
+        ],
+        "device": ["arm64"],
+    },
+    minimum_os_versions = {
+        "ios": "8.0",
+    },
+    public_hdrs = [
+        "//test/starlark_tests/resources:shared.h",
+    ],
+    tags = TARGETS_UNDER_TEST_TAGS,
+    deps = [":fmwk_lib"],
+)
+
+apple_static_xcframework(
+    name = "ios_static_xcfmwk_with_avoid_deps",
+    avoid_deps = [":StaticFmwkLowerLib"],
+    ios = {
+        "simulator": [
+            "x86_64",
+            "arm64",
+        ],
+        "device": ["arm64"],
+    },
+    minimum_os_versions = {
+        "ios": "8.0",
+    },
+    tags = TARGETS_UNDER_TEST_TAGS,
+    deps = [":StaticFmwkUpperLib"],
+)
+
+genrule(
+    name = "dummy_fmwk_objc_hdr",
+    outs = ["DummyFmwk.h"],
+    cmd = "echo '#ifndef SDK_FRAMEWORK_H_\n#define SDK_FRAMEWORK_H_\n void doStuff(); \n#endif\n// SDK_FRAMEWORK_H_' > $@",
+)
+
+genrule(
+    name = "dummy_fmwk_objc_src",
+    outs = ["DummyFmwk.m"],
+    cmd = "echo '#import <Foundation/Foundation.h>\nvoid doStuff() { NSLog(@\"Framework method called\"); }' > $@",
+)
+
+genrule(
+    name = "dummy_fmwk_swift_src",
+    outs = ["DummyFmwk.swift"],
+    cmd = "echo 'import Foundation\n@objc public class SharedClass: NSObject {\n@objc public func doSomethingShared() {\nNSLog(\"Doing something shared!\")\n}\n}\n' > $@",
+)
+
+genrule(
+    name = "dummy_fmwk_dependent_objc_src",
+    outs = ["DummyFmwkDependent.m"],
+    cmd = "echo '#import <Foundation/Foundation.h>\nvoid frameworkDependent() { NSLog(@\"frameworkDependent() called\"); }' > $@",
+)
+
+objc_library(
+    name = "StaticFmwkUpperLib",
+    srcs = [
+        "DummyFmwk.h",
+        "DummyFmwk.m",
+    ],
+    tags = TARGETS_UNDER_TEST_TAGS,
+    deps = [":StaticFmwkLowerLib"],
+)
+
+objc_library(
+    name = "StaticFmwkLowerLib",
+    srcs = ["DummyFmwkDependent.m"],
+    tags = TARGETS_UNDER_TEST_TAGS,
+)
+
+swift_library(
+    name = "SwiftFmwkWithGenHeader",
+    srcs = ["DummyFmwk.swift"],
+    generates_header = True,
+    module_name = "SwiftFmwkWithGenHeader",
+    tags = TARGETS_UNDER_TEST_TAGS,
+)
+
+apple_universal_binary(
+    name = "multi_arch_cc_binary",
+    binary = "//test/starlark_tests/resources:cc_test_binary",
+    minimum_os_version = "11.0",
+    platform_type = "macos",
+    tags = TARGETS_UNDER_TEST_TAGS,
 )

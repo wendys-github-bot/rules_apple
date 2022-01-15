@@ -34,6 +34,8 @@ bzl_library(
     srcs = ["apple.bzl"],
     deps = [
         "//apple/internal:apple_framework_import",
+        "//apple/internal:apple_universal_binary",
+        "//apple/internal:xcframework_rules",
     ],
 )
 
@@ -43,6 +45,14 @@ bzl_library(
     deps = [
         "//apple/internal:linking_support",
         "//apple/internal:rule_factory",
+    ],
+)
+
+bzl_library(
+    name = "aspects",
+    srcs = ["aspects.bzl"],
+    deps = [
+        "//apple/internal/aspects:framework_provider_aspect",
     ],
 )
 
@@ -67,7 +77,6 @@ bzl_library(
     srcs = ["ios.bzl"],
     deps = [
         "//apple/internal:apple_product_type",
-        "//apple/internal:binary_support",
         "//apple/internal:ios_rules",
         "//apple/internal/testing:apple_test_assembler",
         "//apple/internal/testing:build_test_rules",
@@ -85,7 +94,6 @@ bzl_library(
     name = "macos",
     srcs = ["macos.bzl"],
     deps = [
-        "//apple/internal:binary_support",
         "//apple/internal:macos_binary_support",
         "//apple/internal:macos_rules",
         "//apple/internal/testing:apple_test_assembler",
@@ -127,7 +135,6 @@ bzl_library(
     name = "tvos",
     srcs = ["tvos.bzl"],
     deps = [
-        "//apple/internal:binary_support",
         "//apple/internal:tvos_rules",
         "//apple/internal/testing:apple_test_assembler",
         "//apple/internal/testing:build_test_rules",
@@ -158,7 +165,6 @@ bzl_library(
     name = "watchos",
     srcs = ["watchos.bzl"],
     deps = [
-        "//apple/internal:binary_support",
         "//apple/internal:watchos_rules",
         "//apple/internal/testing:apple_test_assembler",
         "//apple/internal/testing:build_test_rules",
