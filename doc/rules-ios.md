@@ -204,9 +204,6 @@ Most iOS app extensions use a plug-in-based architecture where the executable's 
 is provided by a system framework.
 However, iOS 14 introduced Widget Extensions that use a traditional `main` entry point
 (typically expressed through Swift's `@main` attribute).
-If you are building a Widget Extension, you must set `provides_main = True` to indicate
-that your code provides the entry point so that Bazel doesn't direct the linker to use
-the system framework's entry point instead.
 
 **ATTRIBUTES**
 
@@ -517,7 +514,7 @@ To run the same test on multiple simulators/devices see
 
 The following is a list of the `ios_ui_test` specific attributes; for a list
 of the attributes inherited by all test rules, please check the
-[Bazel documentation](https://bazel.build/versions/master/docs/be/common-definitions.html#common-attributes-tests).
+[Bazel documentation](https://bazel.build/reference/be/common-definitions#common-attributes-tests).
 
 
 **ATTRIBUTES**
@@ -560,7 +557,7 @@ To run the same test on multiple simulators/devices see
 
 The following is a list of the `ios_unit_test` specific attributes; for a list
 of the attributes inherited by all test rules, please check the
-[Bazel documentation](https://bazel.build/versions/master/docs/be/common-definitions.html#common-attributes-tests).
+[Bazel documentation](https://bazel.build/reference/be/common-definitions#common-attributes-tests).
 
 **ATTRIBUTES**
 

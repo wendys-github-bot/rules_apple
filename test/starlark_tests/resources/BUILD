@@ -1,4 +1,3 @@
-load("@rules_cc//cc:defs.bzl", "objc_library")
 load(
     "//apple:resources.bzl",
     "apple_bundle_import",
@@ -617,8 +616,73 @@ filegroup(
     srcs = glob(["WatchAppIcon.xcassets/**"]),
 )
 
+filegroup(
+    name = "complications_watchos",
+    srcs = glob(["complications_watchos.xcassets/**"]),
+)
+
 cc_binary(
     name = "cc_test_binary",
     srcs = ["main.cc"],
     tags = FIXTURE_TAGS,
+)
+
+genrule(
+    name = "swift_importing_imported_dynamic_xcfw",
+    outs = ["swift_importing_imported_dynamic_xcfw.swift"],
+    cmd = "echo 'import ios_dynamic_xcframework' > $@",
+    tags = FIXTURE_TAGS,
+)
+
+swift_library(
+    name = "swift_lib_importing_imported_dynamic_xcfw",
+    testonly = True,
+    srcs = [":swift_importing_imported_dynamic_xcfw"],
+    tags = FIXTURE_TAGS,
+    deps = ["//test/starlark_tests/targets_under_test/apple:ios_imported_dynamic_xcframework"],
+)
+
+genrule(
+    name = "swift_importing_imported_static_xcfw",
+    outs = ["swift_importing_imported_static_xcfw.swift"],
+    cmd = "echo 'import ios_static_xcframework_with_module_map' > $@",
+    tags = FIXTURE_TAGS,
+)
+
+swift_library(
+    name = "swift_lib_importing_imported_static_xcfw",
+    testonly = True,
+    srcs = [":swift_importing_imported_static_xcfw"],
+    tags = FIXTURE_TAGS,
+    deps = ["//test/starlark_tests/targets_under_test/apple:ios_imported_static_xcframework_with_module_map"],
+)
+
+genrule(
+    name = "swift_importing_imported_xcfw_bundling_static_fmwks",
+    outs = ["swift_importing_imported_xcfw_bundling_static_fmwks.swift"],
+    cmd = "echo 'import ios_xcframework_bundling_static_fmwks' > $@",
+    tags = FIXTURE_TAGS,
+)
+
+swift_library(
+    name = "swift_lib_importing_imported_xcfw_bundling_static_fmwks",
+    testonly = True,
+    srcs = [":swift_importing_imported_xcfw_bundling_static_fmwks"],
+    tags = FIXTURE_TAGS,
+    deps = ["//test/starlark_tests/targets_under_test/apple:ios_imported_xcframework_bundling_static_xcfmwks"],
+)
+
+genrule(
+    name = "objc_importing_imported_static_xcfw",
+    outs = ["objc_importing_imported_static_xcfw.m"],
+    cmd = """echo '#import "shared.h"' > $@""",
+    tags = FIXTURE_TAGS,
+)
+
+objc_library(
+    name = "objc_lib_importing_imported_static_xcfw",
+    testonly = True,
+    srcs = [":objc_importing_imported_static_xcfw"],
+    tags = FIXTURE_TAGS,
+    deps = ["//test/starlark_tests/targets_under_test/apple:ios_imported_static_xcframework"],
 )

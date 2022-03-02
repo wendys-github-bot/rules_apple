@@ -26,6 +26,7 @@ licenses(["notice"])
         "watchos_arm64",
         "watchos_armv7k",
         "watchos_arm64_32",
+        "watchos_x86_64",
     ]
 ]
 
@@ -127,7 +128,6 @@ bzl_library(
         "//apple/internal/resource_rules:apple_core_ml_library",
         "//apple/internal/resource_rules:apple_resource_bundle",
         "//apple/internal/resource_rules:apple_resource_group",
-        "@rules_cc//cc:defs.bzl",
     ],
 )
 

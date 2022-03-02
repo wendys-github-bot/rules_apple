@@ -65,10 +65,11 @@ def _apple_verification_transition_impl(settings, attr):
             "//command_line_option:watchos_cpus": "armv7k",
         })
     existing_features = settings.get("//command_line_option:features") or []
+    if hasattr(attr, "target_features"):
+        existing_features.extend(attr.target_features)
     if hasattr(attr, "sanitizer") and attr.sanitizer != "none":
-        output_dictionary["//command_line_option:features"] = existing_features + [attr.sanitizer]
-    else:
-        output_dictionary["//command_line_option:features"] = existing_features
+        existing_features.append(attr.sanitizer)
+    output_dictionary["//command_line_option:features"] = existing_features
     return output_dictionary
 
 apple_verification_transition = transition(
@@ -98,7 +99,6 @@ def _apple_verification_test_impl(ctx):
     if AppleBundleInfo in target_under_test:
         bundle_info = target_under_test[AppleBundleInfo]
         archive = bundle_info.archive
-        verifier_script = ctx.file.verifier_script
 
         bundle_with_extension = bundle_info.bundle_name + bundle_info.bundle_extension
 
@@ -242,6 +242,12 @@ https://docs.bazel.build/versions/main/command-line-reference.html#flag--macos_c
             doc = """
 Possible values are `none`, `asan`, `tsan` or `ubsan`. Defaults to `none`.
 Passes a sanitizer to the target under test.
+""",
+        ),
+        "target_features": attr.string_list(
+            mandatory = False,
+            doc = """
+List of additional features to build for the target under testing.
 """,
         ),
         "target_under_test": attr.label(

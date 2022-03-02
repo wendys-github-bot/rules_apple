@@ -1500,7 +1500,6 @@ def _macos_command_line_application_impl(ctx):
     actions = ctx.actions
     apple_toolchain_info = ctx.attr._toolchain[AppleSupportToolchainInfo]
     bin_root_path = ctx.bin_dir.path
-    bundle_id = ctx.attr.bundle_id
     bundle_name, bundle_extension = bundling_support.bundle_full_name_from_rule_ctx(ctx)
     executable_name = bundling_support.executable_name(ctx)
     features = features_support.compute_enabled_features(
@@ -1596,7 +1595,6 @@ def _macos_dylib_impl(ctx):
     actions = ctx.actions
     apple_toolchain_info = ctx.attr._toolchain[AppleSupportToolchainInfo]
     bin_root_path = ctx.bin_dir.path
-    bundle_id = ctx.attr.bundle_id
     bundle_name, bundle_extension = bundling_support.bundle_full_name_from_rule_ctx(ctx)
     executable_name = bundling_support.executable_name(ctx)
     features = features_support.compute_enabled_features(
@@ -1709,11 +1707,7 @@ macos_extension = rule_factory.create_apple_bundling_rule(
 Most macOS app extensions use a plug-in-based architecture where the
 executable's entry point is provided by a system framework. However, macOS 11
 introduced Widget Extensions that use a traditional `main` entry
-point (typically expressed through Swift's `@main` attribute). If you
-are building a Widget Extension, you **must** set
-`provides_main = True` to indicate that your code provides the entry
-point so that Bazel doesn't direct the linker to use the system framework's
-entry point instead.""",
+point (typically expressed through Swift's `@main` attribute).""",
 )
 
 macos_quick_look_plugin = rule_factory.create_apple_bundling_rule(

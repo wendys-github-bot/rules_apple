@@ -25,12 +25,15 @@ basename_without_extension() {
 
 custom_xctestrunner_args=()
 command_line_args=()
-simulator_id=""
+device_id=""
+platform=""
 while [[ $# -gt 0 ]]; do
   arg="$1"
   case $arg in
-    --destination=platform=ios_simulator,id=*)
-      simulator_id="${arg##*=}"
+    --destination=platform=*,id=*)
+      device_id="${arg##*=}"
+      platform="${arg#*platform=}" # Strip "--destination=platform=" prefix
+      platform="${platform%,id=*}" # Strip suffix starting with ",id="
       ;;
     --command_line_args=*)
       command_line_args+=("${arg##*=}")
@@ -132,11 +135,33 @@ if [[ -n "${LAUNCH_OPTIONS_JSON_STR}" ]]; then
 fi
 
 target_flags=()
-if [[ -n "$simulator_id" ]]; then
+if [[ -n "${REUSE_GLOBAL_SIMULATOR:-}" ]]; then
+  if [[ -n "$device_id" ]]; then
+    echo "error: both '\$REUSE_GLOBAL_SIMULATOR' and a custom simulator id cannot be set" >&2
+    exit 1
+  fi
+
+  if [[ -z "%(os_version)s" ]]; then
+    echo "error: to create a re-useable simulator the OS version must always be set on the test runner or with '--ios_simulator_version'" >&2
+    exit 1
+  fi
+
+  if [[ -z "%(device_type)s" ]]; then
+    echo "error: to create a re-useable simulator the device type must always be set on the test runner or with '--ios_simulator_device'" >&2
+    exit 1
+  fi
+
+  id="$("./%(simulator_creator)s" "%(os_version)s" "%(device_type)s")"
   target_flags=(
     "test"
     "--platform=ios_simulator"
-    "--id=$simulator_id"
+    "--id=$id"
+  )
+elif [[ -n "$device_id" ]]; then
+  target_flags=(
+    "test"
+    "--platform=$platform"
+    "--id=$device_id"
   )
 else
   target_flags=(
