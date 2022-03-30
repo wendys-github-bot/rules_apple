@@ -132,6 +132,10 @@ def _apple_resource_aspect_impl(target, ctx):
         process_args["bundle_id"] = ctx.rule.attr.bundle_id or None
         bundle_name = "{}.bundle".format(ctx.rule.attr.bundle_name or ctx.label.name)
 
+        # Passing product_module_name to swift_module `bucketize_args`
+        # so `resources.bucketize_data` function can couple xib with custom `product_module_name`
+        bucketize_args["swift_module"] = ctx.rule.attr.product_module_name or None
+
     # Collect all resource files related to this target.
     if collect_infoplists_args:
         infoplists = resources.collect(
