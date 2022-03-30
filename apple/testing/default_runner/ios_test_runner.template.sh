@@ -105,7 +105,20 @@ else
   TEST_ENV="TEST_SRCDIR=$TEST_SRCDIR"
 fi
 
-readonly profraw="$TMP_DIR/coverage.profraw"
+# default profraw
+profraw="$TMP_DIR/coverage.profraw"
+# check if LLVM_PROFILE_FILE has been set on --test_env, if exist, will use the given path instead
+IFS=',' read -ra ENV <<< "$TEST_ENV"
+for i in "${ENV[@]}"; do
+  IFS='=' read -ra VALUE <<< "$i"
+  for j in "${VALUE[@]}"; do
+    if [ "$j" == "LLVM_PROFILE_FILE" ]; then
+      profraw="${VALUE[1]}"
+      break
+    fi
+  done
+done
+
 if [[ "${COVERAGE:-}" -eq 1 ]]; then
   readonly profile_env="LLVM_PROFILE_FILE=$profraw"
   TEST_ENV="$TEST_ENV,$profile_env"
