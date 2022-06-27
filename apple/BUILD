@@ -22,6 +22,7 @@ licenses(["notice"])
         "ios_sim_arm64",
         "tvos_x86_64",
         "tvos_arm64",
+        "tvos_sim_arm64",
         "watchos_i386",
         "watchos_arm64",
         "watchos_armv7k",
@@ -158,6 +159,8 @@ bzl_library(
     srcs = ["versioning.bzl"],
     deps = [
         ":providers",
+        "//apple/internal:apple_toolchains",
+        "@bazel_skylib//lib:dicts",
     ],
 )
 
