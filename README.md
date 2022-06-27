@@ -32,8 +32,8 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 http_archive(
     name = "build_bazel_rules_apple",
-    sha256 = "4161b2283f80f33b93579627c3bd846169b2d58848b0ffb29b5d4db35263156a",
-    url = "https://github.com/bazelbuild/rules_apple/releases/download/0.34.0/rules_apple.0.34.0.tar.gz",
+    sha256 = "36072d4f3614d309d6a703da0dfe48684ec4c65a89611aeb9590b45af7a3e592",
+    url = "https://github.com/bazelbuild/rules_apple/releases/download/1.0.1/rules_apple.1.0.1.tar.gz",
 )
 
 load(
@@ -98,3 +98,23 @@ ios_application(
 
 See the [examples](https://github.com/bazelbuild/rules_apple/tree/master/examples)
 directory for sample applications.
+
+## Supported bazel versions
+
+rules_apple and rules_swift are often affected by changes in bazel
+itself. This means you generally need to update these rules as you
+update bazel.
+
+You can also see the supported bazel versions in the notes for each
+release on the [releases
+page](https://github.com/bazelbuild/rules_apple/releases).
+
+Besides these constraint this repo follows [semver](https://semver.org/)
+as best as we can since the 1.0.0 release.
+
+| Bazel release | Minimum supported rules version | Final supported rules version|
+|:-------------------:|:-------------------:|:-------------------------:|
+| 6.x (most recent rolling) | 0.34.2 | current |
+| 5.x | 0.33.0 | current |
+| 4.x | 0.30.0 | 0.32.0 |
+| 3.x | 0.20.0 | 0.21.2 |
