@@ -143,6 +143,20 @@ number information propagated by the target. It contains two keys:
     },
 )
 
+AppleDsymBundleInfo = provider(
+    doc = "Provides information for an Apple dSYM bundle.",
+    fields = {
+        "direct_dsyms": """
+`List` containing `File` references to each of the dSYM bundles that act as direct dependencies of
+the given target if any were generated.
+""",
+        "transitive_dsyms": """
+`Depset` containing `File` references to each of the dSYM bundles that act as transitive
+dependencies of the given target if any were generated.
+""",
+    },
+)
+
 AppleExtraOutputsInfo = provider(
     doc = """
 Provides information about extra outputs that should be produced from the build.
@@ -684,6 +698,19 @@ a "marker" to indicate that a target is specifically a watchOS application
 extension bundle (and not some other Apple bundle). Rule authors who wish to
 require that a dependency is a watchOS application extension should use this
 provider to describe that requirement.
+""",
+    fields = {},
+)
+
+WatchosFrameworkBundleInfo = provider(
+    doc = """
+Denotes that a target is watchOS dynamic framework.
+
+This provider does not contain any fields of its own at this time but is used as
+a "marker" to indicate that a target is specifically a watchOS dynamic framework
+bundle (and not some other Apple bundle). Rule authors who wish to require that
+a dependency is a watchOS dynamic framework should use this provider to describe
+that requirement.
 """,
     fields = {},
 )

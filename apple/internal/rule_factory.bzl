@@ -35,10 +35,6 @@ load(
     "apple_resource_aspect",
 )
 load(
-    "@build_bazel_rules_apple//apple/internal/aspects:swift_static_framework_aspect.bzl",
-    "swift_static_framework_aspect",
-)
-load(
     "@build_bazel_rules_apple//apple/internal/aspects:swift_dynamic_framework_aspect.bzl",
     "swift_dynamic_framework_aspect",
 )
@@ -87,11 +83,13 @@ load(
     "TvosFrameworkBundleInfo",
     "WatchosApplicationBundleInfo",
     "WatchosExtensionBundleInfo",
+    "WatchosFrameworkBundleInfo",
 )
 load(
     "@bazel_skylib//lib:dicts.bzl",
     "dicts",
 )
+load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "use_cpp_toolchain")
 
 def _is_test_product_type(product_type):
     """Returns whether the given product type is for tests purposes or not."""
@@ -205,6 +203,19 @@ AppleTestRunnerInfo provider.
         cfg = "exec",
         default = Label("@build_bazel_apple_support//tools:coverage_support"),
     ),
+    "_lcov_merger": attr.label(
+        default = configuration_field(
+            fragment = "coverage",
+            name = "output_generator",
+        ),
+        cfg = "exec",
+    ),
+    "test_filter": attr.string(
+        doc = """
+Test filter string that will be passed into the test runner to select which tests will run.
+""",
+        default = "",
+    ),
 }
 
 def _common_binary_linking_attrs(deps_cfg, product_type):
@@ -221,8 +232,6 @@ def _common_binary_linking_attrs(deps_cfg, product_type):
         if _is_test_product_type(product_type):
             deps_aspects.append(apple_test_info_aspect)
             default_stamp = 0
-        if product_type == apple_product_type.static_framework:
-            deps_aspects.append(swift_static_framework_aspect)
         if product_type == apple_product_type.framework:
             deps_aspects.append(swift_dynamic_framework_aspect)
 
@@ -409,14 +418,18 @@ A list of resources or files bundled with the bundle. The resources will be stor
 appropriate resources location within the bundle.
 """,
         ),
-        "version": attr.label(
-            providers = [[AppleBundleVersionInfo]],
-            doc = """
+    })
+
+    if rule_descriptor.product_type != apple_product_type.static_framework:
+        attrs.append({
+            "version": attr.label(
+                providers = [[AppleBundleVersionInfo]],
+                doc = """
 An `apple_bundle_version` target that represents the version for this target. See
 [`apple_bundle_version`](https://github.com/bazelbuild/rules_apple/blob/master/doc/rules-versioning.md#apple_bundle_version).
 """,
-        ),
-    })
+            ),
+        })
 
     if len(rule_descriptor.allowed_device_families) > 1:
         extra_args = {}
@@ -570,6 +583,10 @@ to manually dlopen the framework at runtime.
         })
     elif rule_descriptor.product_type == apple_product_type.static_framework:
         attrs.append({
+            "_emitswiftinterface": attr.bool(
+                default = True,
+                doc = "Private attribute to generate Swift interfaces for static frameworks.",
+            ),
             "hdrs": attr.label_list(
                 allow_files = [".h"],
                 doc = """
@@ -588,6 +605,7 @@ umbrella header will be generated under the same name as this target.
 """,
             ),
             "avoid_deps": attr.label_list(
+                cfg = apple_common.multi_arch_split,
                 doc = """
 A list of library targets on which this framework depends in order to compile, but the transitive
 closure of which will not be linked into the framework's binary.
@@ -679,6 +697,11 @@ Info.plist under the key `UILaunchStoryboardName`.
                 aspects = [framework_provider_aspect],
                 mandatory = test_host_mandatory,
                 providers = required_providers,
+            ),
+            "_swizzle_absolute_xcttestsourcelocation": attr.label(
+                default = Label(
+                    "@build_bazel_apple_support//lib:swizzle_absolute_xcttestsourcelocation",
+                ),
             ),
         })
 
@@ -809,6 +832,11 @@ set, then the default extension is determined by the application's product_type.
                     [AppleBundleInfo, MacosExtensionBundleInfo],
                 ],
             ),
+            "_swizzle_absolute_xcttestsourcelocation": attr.label(
+                default = Label(
+                    "@build_bazel_apple_support//lib:swizzle_absolute_xcttestsourcelocation",
+                ),
+            ),
         })
 
     return attrs
@@ -848,9 +876,20 @@ If true, compiles and links this framework with `-application-extension`, restri
 use only extension-safe APIs.
 """,
             ),
+            "bundle_only": attr.bool(
+                default = False,
+                doc = """
+Avoid linking the dynamic framework, but still include it in the app. This is useful when you want
+to manually dlopen the framework at runtime.
+""",
+            ),
         })
     elif rule_descriptor.product_type == apple_product_type.static_framework:
         attrs.append({
+            "_emitswiftinterface": attr.bool(
+                default = True,
+                doc = "Private attribute to generate Swift interfaces for static frameworks.",
+            ),
             "hdrs": attr.label_list(
                 allow_files = [".h"],
                 doc = """
@@ -869,6 +908,7 @@ umbrella header will be generated under the same name as this target.
 """,
             ),
             "avoid_deps": attr.label_list(
+                cfg = apple_common.multi_arch_split,
                 doc = """
 A list of library targets on which this framework depends in order to compile, but the transitive
 closure of which will not be linked into the framework's binary.
@@ -893,6 +933,11 @@ fashion, such as a Cocoapod.
                     [AppleBundleInfo, TvosApplicationBundleInfo],
                     [AppleBundleInfo, TvosExtensionBundleInfo],
                 ],
+            ),
+            "_swizzle_absolute_xcttestsourcelocation": attr.label(
+                default = Label(
+                    "@build_bazel_apple_support//lib:swizzle_absolute_xcttestsourcelocation",
+                ),
             ),
         })
 
@@ -922,12 +967,23 @@ def _get_watchos_attrs(rule_descriptor):
     attrs = []
 
     if rule_descriptor.product_type == apple_product_type.watch2_extension:
-        attrs.append({"extensions": attr.label_list(
-            providers = [[AppleBundleInfo, WatchosExtensionBundleInfo]],
-            doc = """
+        attrs.append({
+            "extensions": attr.label_list(
+                providers = [[AppleBundleInfo, WatchosExtensionBundleInfo]],
+                doc = """
 A list of watchOS application extensions to include in the final watch extension bundle.
 """,
-        )})
+            ),
+            "application_extension": attr.bool(
+                default = False,
+                doc = """
+If `True`, this extension is an App Extension instead of a WatchKit Extension.
+It links the extension with the application extension point (`_NSExtensionMain`)
+instead of the WatchKit extension point (`_WKExtensionMain`), and has the
+`app_extension` `product_type` instead of `watch2_extension`.
+""",
+            ),
+        })
     if rule_descriptor.product_type == apple_product_type.watch2_application:
         attrs.append({
             "extension": attr.label(
@@ -957,6 +1013,9 @@ ignored.
         })
     elif rule_descriptor.product_type == apple_product_type.framework:
         attrs.append({
+            "hdrs": attr.label_list(
+                allow_files = [".h"],
+            ),
             "extension_safe": attr.bool(
                 default = False,
                 doc = """
@@ -964,23 +1023,20 @@ If true, compiles and links this framework with `-application-extension`, restri
 use only extension-safe APIs.
 """,
             ),
-        })
-
-        if rule_descriptor.requires_deps:
-            extra_args = {}
-            attrs.append({
-                "frameworks": attr.label_list(
-                    providers = [[AppleBundleInfo, IosFrameworkBundleInfo]],
-                    doc = """
-A list of framework targets (see
-[`ios_framework`](https://github.com/bazelbuild/rules_apple/blob/master/doc/rules-ios.md#ios_framework))
-that this target depends on.
+            "bundle_only": attr.bool(
+                default = False,
+                doc = """
+Avoid linking the dynamic framework, but still include it in the app. This is useful when you want
+to manually dlopen the framework at runtime.
 """,
-                    **extra_args
-                ),
-            })
+            ),
+        })
     elif rule_descriptor.product_type == apple_product_type.static_framework:
         attrs.append({
+            "_emitswiftinterface": attr.bool(
+                default = True,
+                doc = "Private attribute to generate Swift interfaces for static frameworks.",
+            ),
             "hdrs": attr.label_list(
                 allow_files = [".h"],
                 doc = """
@@ -999,6 +1055,7 @@ umbrella header will be generated under the same name as this target.
 """,
             ),
             "avoid_deps": attr.label_list(
+                cfg = apple_common.multi_arch_split,
                 doc = """
 A list of library targets on which this framework depends in order to compile, but the transitive
 closure of which will not be linked into the framework's binary.
@@ -1020,6 +1077,28 @@ fashion, such as a Cocoapod.
                 aspects = [framework_provider_aspect],
                 mandatory = test_host_mandatory,
                 providers = [AppleBundleInfo, WatchosApplicationBundleInfo],
+            ),
+            "_swizzle_absolute_xcttestsourcelocation": attr.label(
+                default = Label(
+                    "@build_bazel_apple_support//lib:swizzle_absolute_xcttestsourcelocation",
+                ),
+            ),
+        })
+
+    if rule_descriptor.requires_deps:
+        extra_args = {}
+        if rule_descriptor.product_type == apple_product_type.watch2_extension:
+            extra_args["aspects"] = [framework_provider_aspect]
+
+        attrs.append({
+            "frameworks": attr.label_list(
+                providers = [[AppleBundleInfo, WatchosFrameworkBundleInfo]],
+                doc = """
+A list of framework targets (see
+[`watchos_framework`](https://github.com/bazelbuild/rules_apple/blob/master/doc/rules-watchos.md#watchos_framework))
+that this target depends on.
+""",
+                **extra_args
             ),
         })
 
@@ -1180,7 +1259,7 @@ binaries/libraries will be created combining all architectures specified by
         executable = is_executable,
         fragments = ["apple", "cpp", "objc"],
         outputs = implicit_outputs,
-        toolchains = ["@bazel_tools//tools/cpp:toolchain_type"],
+        toolchains = use_cpp_toolchain(),
     )
 
 def _create_apple_bundling_rule(
@@ -1256,7 +1335,7 @@ def _create_apple_bundling_rule(
         fragments = ["apple", "cpp", "objc"],
         # TODO(kaipi): Remove the implicit output and use DefaultInfo instead.
         outputs = {"archive": archive_name},
-        toolchains = ["@bazel_tools//tools/cpp:toolchain_type"],
+        toolchains = use_cpp_toolchain(),
     )
 
 def _create_apple_test_rule(implementation, doc, platform_type):
@@ -1277,7 +1356,7 @@ def _create_apple_test_rule(implementation, doc, platform_type):
         ),
         doc = doc,
         test = True,
-        toolchains = ["@bazel_tools//tools/cpp:toolchain_type"],
+        toolchains = use_cpp_toolchain(),
     )
 
 rule_factory = struct(
