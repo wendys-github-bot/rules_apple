@@ -169,6 +169,19 @@ objc_library(
     tags = FIXTURE_TAGS,
 )
 
+objc_library(
+    name = "objc_swift_depending_test_lib",
+    srcs = ["test.m"],
+    tags = FIXTURE_TAGS,
+    deps = [":swift_uikit_appdelegate"],
+)
+
+swift_library(
+    name = "swift_uikit_appdelegate",
+    srcs = ["AppDelegate.swift"],
+    tags = FIXTURE_TAGS,
+)
+
 apple_bundle_import(
     name = "settings_bundle_ios",
     bundle_imports = [":settings_bundle_ios_files"],
@@ -639,7 +652,7 @@ swift_library(
     testonly = True,
     srcs = [":swift_importing_imported_dynamic_xcfw"],
     tags = FIXTURE_TAGS,
-    deps = ["//test/starlark_tests/targets_under_test/apple:ios_imported_dynamic_xcframework"],
+    deps = ["//test/starlark_tests/targets_under_test/apple:ios_imported_dynamic_xcframework_old"],
 )
 
 genrule(
@@ -684,5 +697,5 @@ objc_library(
     testonly = True,
     srcs = [":objc_importing_imported_static_xcfw"],
     tags = FIXTURE_TAGS,
-    deps = ["//test/starlark_tests/targets_under_test/apple:ios_imported_static_xcframework"],
+    deps = ["//test/starlark_tests/targets_under_test/apple:ios_imported_static_xcframework_old"],
 )
