@@ -111,6 +111,20 @@ else
   TEST_ENV="TEST_SRCDIR=$TEST_SRCDIR"
 fi
 
+# default profraw
+profraw="$TMP_DIR/coverage.profraw"
+# check if LLVM_PROFILE_FILE has been set on --test_env, if exist, will use the given path instead
+IFS=',' read -ra ENV <<< "$TEST_ENV"
+for i in "${ENV[@]}"; do
+  IFS='=' read -ra VALUE <<< "$i"
+  for j in "${VALUE[@]}"; do
+    if [ "$j" == "LLVM_PROFILE_FILE" ]; then
+      profraw="${VALUE[1]}"
+      break
+    fi
+  done
+done
+
 sanitizer_dyld_env=""
 readonly sanitizer_root="${TEST_BUNDLE_PATH}/Frameworks"
 for sanitizer in "$sanitizer_root"/libclang_rt.*.dylib; do
