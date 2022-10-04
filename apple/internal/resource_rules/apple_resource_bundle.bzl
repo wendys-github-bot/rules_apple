@@ -46,6 +46,12 @@ The desired name of the bundle (without the `.bundle` extension). If this attrib
 then the `name` of the target will be used instead.
 """,
         ),
+        "product_module_name": attr.string(
+            doc = """
+This Product Module Name Attr is created to facilitate the legacy product_module_name on our Codebase. 
+if left empty, will fetch use bundle_name without `Resources.bundle`.
+for example FooResources, then it will be `Foo`""",
+        ),
         "infoplists": attr.label_list(
             allow_empty = True,
             allow_files = True,
